@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.14.0)
 
-project(nanopb VERSION 1.0.0 LANGUAGES C)
+#project(nanopb VERSION 1.0.0 LANGUAGES C)
 
 set(nanopb_VERSION_STRING ${PROJECT_NAME}-${${PROJECT_NAME}_VERSION}-dev)
 set(nanopb_SOVERSION 0)
@@ -11,7 +11,7 @@ option(BUILD_SHARED_LIBS "Build shared libraries" OFF)
 option(BUILD_STATIC_LIBS "Build static libraries" ON)
 
 option(nanopb_BUILD_RUNTIME "Build the headers and libraries needed at runtime" ON)
-option(nanopb_BUILD_GENERATOR "Build the protoc plugin for code generation" ON)
+option(nanopb_BUILD_GENERATOR "Build the protoc plugin for code generation" OFF)
 option(nanopb_MSVC_STATIC_RUNTIME "Link static runtime libraries" ON)
 
 set(nanopb_PYTHON_INSTDIR_OVERRIDE "" CACHE PATH "Override the default python installation directory with the given path")
@@ -132,56 +132,22 @@ endif()
 
 if(nanopb_BUILD_RUNTIME)
     if(BUILD_SHARED_LIBS)
-        add_library(protobuf-nanopb SHARED
-            pb.h
-            pb_common.h
-            pb_common.c
-            pb_encode.h
-            pb_encode.c
-            pb_decode.h
-            pb_decode.c)
-        set_target_properties(protobuf-nanopb PROPERTIES
-            SOVERSION ${nanopb_SOVERSION})
-        install(TARGETS protobuf-nanopb EXPORT nanopb-targets
-            ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-            LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-            RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
-        target_include_directories(protobuf-nanopb INTERFACE
-            $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/nanopb>
-            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+        idf_component_register(
+            SRCS "pb_common.c" "pb_encode.c" "pb_decode.c"
+            INCLUDE_DIRS "."
         )
+      
     endif()
 
     if(BUILD_STATIC_LIBS)
-        add_library(protobuf-nanopb-static STATIC
-            pb.h
-            pb_common.h
-            pb_common.c
-            pb_encode.h
-            pb_encode.c
-            pb_decode.h
-            pb_decode.c)
-        set_target_properties(protobuf-nanopb-static PROPERTIES
-            OUTPUT_NAME protobuf-nanopb)
-        install(TARGETS protobuf-nanopb-static EXPORT nanopb-targets
-            ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
-        target_include_directories(protobuf-nanopb-static INTERFACE
-            $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/nanopb>
-            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+        idf_component_register(
+            SRCS "pb_common.c" "pb_encode.c" "pb_decode.c"
+            INCLUDE_DIRS "."
         )
     endif()
 
     configure_file(extra/nanopb-config-version.cmake.in
         nanopb-config-version.cmake @ONLY)
 
-    install(EXPORT nanopb-targets
-        DESTINATION ${CMAKE_INSTALL_CMAKEDIR}
-        NAMESPACE nanopb::)
-
-    install(FILES extra/nanopb-config.cmake
-        ${CMAKE_CURRENT_BINARY_DIR}/nanopb-config-version.cmake
-        DESTINATION ${CMAKE_INSTALL_CMAKEDIR})
-
-    install(FILES pb.h pb_common.h pb_encode.h pb_decode.h
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/nanopb)
+   
 endif()
